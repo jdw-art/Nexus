@@ -4,7 +4,6 @@ from typing import Optional, Dict, Any
 
 from pydantic import BaseModel
 
-
 class Config(BaseModel):
     """
     Nexus配置类
