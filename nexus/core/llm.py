@@ -1,6 +1,6 @@
 """Nexus统一LLM接口 - 基于OpenAI原生API"""
 import os
-from typing import Literal, Optional
+from typing import Literal, Optional, List, Dict, Iterator
 
 from openai import OpenAI
 
@@ -287,4 +287,35 @@ class NexusLLM:
             else:
                 return "gpt-3.5-turbo"
 
-    # todo: 流式输出和标准输出
+    # todo: 流式输出
+    def think(self, messages: List[Dict[str, str]], temperature: Optional[float] = None) -> Iterator[str]:
+        """
+        调用大语言模型进行思考，并返回流式响应。
+        这是主要的调用方法，默认使用流式响应以获得更好的用户体验。
+        :param messages: 消息列表
+        :param temperature: 温度参数，如果未提供则使用初始化时的值
+        :return: 流式响应的文本片段
+        """
+        print(f"🧠 正在调用 {self.model} 模型...")
+        try:
+            response = self._client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=temperature if temperature is not None else self.temperature,
+                max_tokens=self.max_tokens,
+                stream=True
+            )
+
+            # 处理流式响应
+            print("✅ 大语言模型响应成功:")
+            for chunk in response:
+                content = chunk.choices[0].delta.content or ""
+                if content:
+                    print(content, end="", flush=True)
+                    yield content
+            print()     # 流式回答结束后执行换行
+        except Exception as e:
+            print(f"❌ 调用LLM API时发生错误: {e}")
+            raise NexusException(f"LLM调用失败：{str(e)}")
+
+        # todo: 标准回答，非流式
