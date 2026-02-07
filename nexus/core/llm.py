@@ -318,4 +318,31 @@ class NexusLLM:
             print(f"❌ 调用LLM API时发生错误: {e}")
             raise NexusException(f"LLM调用失败：{str(e)}")
 
-        # todo: 标准回答，非流式
+    # 标准回答，非流式
+    def invoke(self, messages: List[Dict[str, str]], **kwargs) -> str:
+        """
+        非流式调用LLM，返回完整响应。
+        适用于不需要流式输出的场景。
+        :param messages: 消息列表
+        :param kwargs: 参数列表
+        :return:
+        """
+        try:
+            response = self._client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=kwargs.get("temperature", self.temperature),
+                max_tokens=kwargs.get("max_tokens", self.max_tokens),
+                **{k: v for k, v in kwargs.items() if k not in ["temperature", "max_tokens"]}
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            raise NexusException(f"LLM调用失败: {str(e)}")
+
+    def stream_invoke(self, messages: list[dict[str, str]], **kwargs) -> Iterator[str]:
+        """
+        流式调用LLM的别名方法，与think方法功能相同。
+        保持向后兼容性。
+        """
+        temperature = kwargs.get('temperature')
+        yield from self.think(messages, temperature)
