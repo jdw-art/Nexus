@@ -287,7 +287,7 @@ class NexusLLM:
             else:
                 return "gpt-3.5-turbo"
 
-    # todo: 流式输出
+    # 流式输出
     def think(self, messages: List[Dict[str, str]], temperature: Optional[float] = None) -> Iterator[str]:
         """
         调用大语言模型进行思考，并返回流式响应。

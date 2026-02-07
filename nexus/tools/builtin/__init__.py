@@ -17,7 +17,9 @@ NexusAgents框架的内置工具集合，包括：
 """
 
 from .calculator import CalculatorTool
+from .search_tool import SearchTool
 
 __all__ = [
-    "CalculatorTool"
+    "CalculatorTool",
+    "SearchTool",
 ]
