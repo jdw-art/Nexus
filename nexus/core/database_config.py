@@ -146,7 +146,32 @@ class DatabaseConfig(BaseModel):
         """获取Neo4j配置字典"""
         return self.neo4j.to_dict()
 
-    # todo: 验证数据库连接
+    # 验证数据库连接
+    def validate_connections(self) -> Dict[str, bool]:
+        """验证数据库连接配置"""
+        results = {}
+
+        # 验证Qdrant配置
+        try:
+            from ..memory.storage.qdrant_store import QdrantVectorStore
+            qdrant_store = QdrantVectorStore(**self.get_qdrant_config())
+            results["qdrant"] = qdrant_store.health_check()
+            logger.info(f"✅ Qdrant连接验证: {'成功' if results['qdrant'] else '失败'}")
+        except Exception as e:
+            results["qdrant"] = False
+            logger.error(f"❌ Qdrant连接验证失败: {e}")
+
+        # 验证Neo4j配置
+        try:
+            from ..memory.storage.neo4j_store import Neo4jGraphStore
+            neo4j_store = Neo4jGraphStore(**self.get_neo4j_config())
+            results["neo4j"] = neo4j_store.health_check()
+            logger.info(f"✅ Neo4j连接验证: {'成功' if results['neo4j'] else '失败'}")
+        except Exception as e:
+            results["neo4j"] = False
+            logger.error(f"❌ Neo4j连接验证失败: {e}")
+
+        return results
 
 
 # 全局配置实例
