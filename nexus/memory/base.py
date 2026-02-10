@@ -54,7 +54,7 @@ class BaseMemory(ABC):
     """
     def __init__(self, config: MemoryConfig, storage_backend=None):
         self.config = config
-        self.storage_backend = storage_backend
+        self.storage = storage_backend
         self.memory_type = self.__class__.__name__.lower().replace("memory", "")
 
     @abstractmethod

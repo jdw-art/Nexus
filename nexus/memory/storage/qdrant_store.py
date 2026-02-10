@@ -247,7 +247,7 @@ class QdrantVectorStore:
             self,
             vectors: List[List[float]],
             metadata: List[Dict[str, Any]],
-            ids: Optional[List[int]] = None
+            ids: Optional[List[str]] = None
     ) -> bool:
         """
         添加向量到Qdrant中
