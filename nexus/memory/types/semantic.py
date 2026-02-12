@@ -6,7 +6,7 @@
 - 知识图谱进行实体关系推理
 - 混合检索策略优化结果质量
 """
-
+import traceback
 from typing import List, Dict, Any, Optional, Set, Tuple
 from datetime import datetime, timedelta
 import json
@@ -26,7 +26,7 @@ class Entity:
     """实体类"""
     def __init__(
             self,
-            entity_id: int,
+            entity_id: str,
             name: str,
             entity_type: str,
             description: str,
@@ -220,11 +220,283 @@ class SemanticMemory(BaseMemory):
             embedding = self.embedding_model.encode(memory_item.content)
             self.memory_embeddings[memory_item.id] = embedding
 
-            # todo: 2. 提取实体和关系
+            # 2. 提取实体和关系
+            entities = self._extract_entities(memory_item.content)
+            relations = self._extract_relations(memory_item.content, entities)
 
             # 3. 存储到Neo4j数据库
+            for entity in entities:
+                self._add_entity_to_graph(entity, memory_item)
+
+            for relation in relations:
+                self._add_relation_to_graph(relation, memory_item)
 
             # 4. 存储到Qdrant数据库
+            metadata = {
+                "memory_id": memory_item.id,
+                "user_id": memory_item.user_id,
+                "content": memory_item.content,
+                "memory_type": memory_item.memory_type,
+                "timestamp": int(memory_item.timestamp.timestamp()),
+                "importance": memory_item.importance,
+                "entities": [e.entity_id for e in entities],
+                "entity_count": len(entities),
+                "relation_count": len(relations)
+            }
+
+            success = self.vector_store.add_vectors(
+                vectors=[embedding.tolist()],
+                metadata=[metadata],
+                ids=[memory_item.id]
+            )
+
+            if not success:
+                logger.warning("⚠️ 向量存储失败，但记忆已添加到图数据库")
+
+            # 5. 添加实体信息到元数据
+            memory_item.metadata["entities"] = [e.entity_id for e in entities]
+            memory_item.metadata["relations"] = [
+                f"{r.from_entity}-{r.relation_type}-{r.to_entity}" for r in relations
+            ]
+
+            # 6. 存储记忆
+            self.semantic_memories.append(memory_item)
+
+            logger.info(f"✅ 添加语义记忆: {len(entities)}个实体, {len(relations)}个关系")
+            return memory_item.id
         except Exception as e:
             logger.error(f"❌ 添加语义记忆失败: {e}")
             raise
+
+    def _extract_entities(self, text: str) -> List[Entity]:
+        """智能多语言实体提取"""
+        entities = []
+
+        # 检测文本语言
+        lang = self._detect_language(text)
+
+        # 选择合适的spaCy模型
+        selected_nlp = None
+        if lang == "zh" and "zh_core_web_sm" in self.nlp_models:
+            selected_nlp = self.nlp_models["zh_core_web_sm"]
+        elif lang == "en" and "en_core_web_sm" in self.nlp_models:
+            selected_nlp = self.nlp_models["en_core_web_sm"]
+        else:
+            # 使用默认模型
+            selected_nlp = self.nlp
+
+        logger.debug(f"🌐 检测语言: {lang}, 使用模型: {selected_nlp.meta['name'] if selected_nlp else 'None'}")
+
+        # 使用spaCy进行实体识别和词法分析
+        if selected_nlp:
+            try:
+                doc = selected_nlp(text)
+                logger.debug(f"📝 spaCy处理文本: '{text}' -> {len(doc.ents)} 个实体")
+
+                # 存储词法分析结果，供Neo4j使用
+                self._store_linguistic_analysis(doc, text)
+
+                if not doc.ents:
+                    # 如果没有实体，记录详细的词元信息
+                    logger.debug("🔍 未找到实体，词元分析:")
+                    for token in doc[:5]:  # 只显示前5个词元
+                        logger.debug(f"   '{token.text}' -> POS: {token.pos_}, TAG: {token.tag_}, ENT_IOB: {token.ent_iob_}")
+
+                for ent in doc.ents:
+                    entity = Entity(
+                        entity_id=f"entity_{hash(ent.text)}",
+                        name=ent.text,
+                        entity_type=ent.label_,
+                        description=f"从文本中识别的{ent.label_}实体"
+                    )
+                    entities.append(entity)
+                    # 安全获取置信度信息
+                    confidence = "N/A"
+
+                    try:
+                        if hasattr(ent._, 'confidence'):
+                            confidence = getattr(ent._, 'confidence', 'N/A')
+                    except:
+                        confidence = "N/A"
+
+                    logger.debug(f"🏷️ spaCy识别实体: '{ent.text}' -> {ent.label_} (置信度: {confidence})")
+            except Exception as e:
+                logger.warning(f"⚠️ spaCy实体识别失败: {e}")
+                logger.debug(f"详细错误: {traceback.format_exc()}")
+        else:
+            logger.warning("⚠️ 没有可用的spaCy模型进行实体识别")
+
+        return entities
+
+    def _extract_relations(self, text: str, entities: List[Entity]) -> List[Relation]:
+        """提取关系"""
+        relations = []
+        # 仅保留简单共现关系，不做任何正则/关键词匹配
+        for i, entity1 in enumerate(entities):
+            for entity2 in entities[i + 1:]:
+                relations.append(Relation(
+                    from_entity=entity1.entity_id,
+                    to_entity=entity2.entity_id,
+                    relation_type="CO_OCCURS",
+                    strength=0.5,
+                    evidence=text[:100]
+                ))
+        return relations
+
+    def _detect_language(self, text: str) -> str:
+        """简单的语言检测"""
+        # 统计中文字符比例（无正则，逐字符判断范围）
+        chinese_chars = sum(1 for ch in text if '\u4e00' <= ch <= '\u9fff')
+        total_chars = len(text.replace(' ', ''))
+
+        if total_chars == 0:
+            return "en"
+
+        chinese_ratio = chinese_chars / total_chars
+        return "zh" if chinese_ratio > 0.3 else "en"
+
+    def _store_linguistic_analysis(self, doc, text: str):
+        """存储spaCy词法分析结果到Neo4j"""
+        if not self.graph_store:
+            return
+
+        try:
+            # 为每个词元建立节点
+            for token in doc:
+                # 跳过标点符号和空格
+                if token.is_input or token .is_space:
+                    continue
+
+                token_id = f"token_{hash(token.text + token.pos_)}"
+
+                # 添加词元节点到Neo4j
+                self.graph_store.add_entity(
+                    entity_id=token_id,
+                    name=token.text,
+                    entity_type="TOKEN",
+                    properties={
+                        "pos": token.pos_,  # 词性（NOUN, VERB等）
+                        "tag": token.tag_,  # 细粒度标签
+                        "lemma": token.lemma_,  # 词元原形
+                        "is_alpha": token.is_alpha,
+                        "is_stop": token.is_stop,
+                        "source_text": text[:50],  # 来源文本片段
+                        "language": self._detect_language(text)
+                    }
+                )
+
+                # 如果是名词，可能存在潜在的概念
+                if token.pos_ in ["NOUN", "PROPN"]:
+                    concept_id = f"concept_{hash(token.text)}"
+                    self.graph_store.add_entity(
+                        entity_id=concept_id,
+                        name=token.text,
+                        entity_type="CONCEPT",
+                        properties={
+                            "category": token.pos_,
+                            "frequency": 1,  # 可以后续累计
+                            "source_text": text[:50]
+                        }
+                    )
+
+                    # 建立词元到概念的关系
+                    self.graph_store.add_relationship(
+                        from_entity_id=token_id,
+                        to_entity_id=concept_id,
+                        relationship_type="REPRESENTS",
+                        properties={"confidence": 1.0}
+                    )
+
+
+            # 建立词元之间的依存关系
+            for token in doc:
+                if token.is_input or token.is_space or token.head == token:
+                    continue
+
+                from_id = f"token_{hash(token.text + token.pos_)}"
+                to_id = f"token_{hash(token.head.text + token.head.pos_)}"
+
+                # Neo4j不允许关系类型包含冒号，需要清理
+                relation_type = token.dep_.upper().replace(":", "_")
+
+                self.graph_store.add_relationship(
+                    from_entity_id=from_id,
+                    to_entity_id=to_id,
+                    relationship_type=relation_type,    # 清理后的依存关系类型
+                    properties={
+                        "dependency": token.dep_,   # 保留原始依存关系
+                        "source_text": text[:50]
+                    }
+                )
+
+            logger.debug(f"🔗 已将词法分析结果存储到Neo4j: {len([t for t in doc if not t.is_punct and not t.is_space])} 个词元")
+
+        except Exception as e:
+            logger.warning(f"⚠️ 存储词法分析失败: {e}")
+
+    def _add_entity_to_graph(self, entity: Entity, memory_item: MemoryItem):
+        """添加实体到Neo4j图数据库"""
+        try:
+            # 准备实体属性
+            properties = {
+                "name": entity.name,
+                "description": entity.description,
+                "frequency": entity.frequency,
+                "memory_id": memory_item.id,
+                "user_id": memory_item.user_id,
+                "importance": memory_item.importance,
+                **entity.properties
+            }
+
+            # 添加到Neo4j
+            success = self.graph_store.add_entity(
+                entity_id=entity.entity_id,
+                name=entity.name,
+                entity_type=entity.entity_type,
+                properties=properties
+            )
+
+            if success:
+                # 同时更新本地缓存
+                if entity.entity_id in self.entities:
+                    self.entities[entity.entity_id].frequency += 1
+                    self.entities[entity.entity_id].updated_at = datetime.now()
+                else:
+                    self.entities[entity.entity_id] = entity
+
+            return success
+
+        except Exception as e:
+            logger.error(f"❌ 添加实体到图数据库失败: {e}")
+            return False
+
+    def _add_relation_to_graph(self, relation: Relation, memory_item: MemoryItem):
+        """添加关系到Neo4j图数据库"""
+        try:
+            # 准备关系属性
+            properties = {
+                "strength": relation.strength,
+                "memory_id": memory_item.id,
+                "user_id": memory_item.user_id,
+                "importance": memory_item.importance,
+                "evidence": relation.evidence
+            }
+
+            # 添加到Neo4j
+            success = self.graph_store.add_relationship(
+                from_entity_id=relation.from_entity,
+                to_entity_id=relation.to_entity,
+                relationship_type=relation.relation_type,
+                properties=properties
+            )
+
+            if success:
+                # 同时更新本地缓存
+                self.relations.append(relation)
+
+            return success
+
+        except Exception as e:
+            logger.error(f"❌ 添加关系到图数据库失败: {e}")
+            return False
+
