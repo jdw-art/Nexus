@@ -13,7 +13,7 @@ from typing import List, Dict, Any
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from nexus.memory import BaseMemory, MemoryConfig, MemoryItem
+from ..base import BaseMemory, MemoryItem, MemoryConfig
 
 
 class WorkingMemory(BaseMemory):
