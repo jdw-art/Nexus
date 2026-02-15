@@ -19,9 +19,11 @@ NexusAgents框架的内置工具集合，包括：
 from .calculator import CalculatorTool
 from .search_tool import SearchTool
 from .memory_tool import MemoryTool
+from .rag_tool import RAGTool
 
 __all__ = [
     "CalculatorTool",
     "SearchTool",
     "MemoryTool",
+    "RAGTool",
 ]
