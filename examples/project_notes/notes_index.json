@@ -1,0 +1,28 @@
+{
+  "notes": [
+    {
+      "id": "note_20260217_174017_0",
+      "title": "重构项目 - 第一阶段",
+      "type": "task_state",
+      "tags": [
+        "refactoring",
+        "phase1"
+      ],
+      "created_at": "2026-02-17T17:40:17.642036"
+    },
+    {
+      "id": "note_20260217_174017_1",
+      "title": "依赖冲突问题",
+      "type": "blocker",
+      "tags": [
+        "dependency",
+        "urgent"
+      ],
+      "created_at": "2026-02-17T17:40:17.642238"
+    }
+  ],
+  "metadata": {
+    "created_at": "2026-02-17T17:40:17.641383",
+    "total_notes": 2
+  }
+}
