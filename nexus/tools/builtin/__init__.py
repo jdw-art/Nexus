@@ -20,10 +20,12 @@ from .calculator import CalculatorTool
 from .search_tool import SearchTool
 from .memory_tool import MemoryTool
 from .rag_tool import RAGTool
+from .note_tool import NoteTool
 
 __all__ = [
     "CalculatorTool",
     "SearchTool",
     "MemoryTool",
     "RAGTool",
+    "NoteTool",
 ]
