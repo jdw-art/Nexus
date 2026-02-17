@@ -27,7 +27,7 @@ class ContextPacket:
         metadata: 可选的元数据
     """
     content: str
-    timestamp: datetime = field(default_factory=datetime.now())
+    timestamp: datetime = field(default_factory=datetime.now)
     metadata: Dict[str, Any] = field(default_factory=dict)
     token_count: int = 0
     relevance_score: float = 0.0    # 0.0-1.0
