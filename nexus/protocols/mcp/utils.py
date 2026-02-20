@@ -1,63 +1,144 @@
-"""协议基类（概念性）
+"""
+MCP 协议工具函数
 
-本模块定义了协议的基本接口概念。
-实际实现中，各协议根据自己的特点独立实现，不强制继承这个基类。
-
-协议接口概念：
-- 协议标识：每个协议有唯一的名称和版本
-- 消息传递：支持发送和接收消息
-- 信息查询：可以获取协议的基本信息
-
-实际使用：
-- MCP: 使用 fastmcp 库实现
-- A2A: 使用官方 a2a 库实现
-- ANP: 使用概念性实现
-
-注意：这个基类主要用于文档说明，实际协议实现不需要继承它。
+提供上下文管理、消息解析等辅助功能。
+这些函数主要用于处理 MCP 协议的数据结构。
 """
 
-from enum import Enum
+from typing import Dict, Any, List, Optional, Union
+import json
 
 
-class ProtocolType(Enum):
-    """协议类型枚举"""
-    MCP = "mcp"  # Model Context Protocol
-    A2A = "a2a"  # Agent-to-Agent Protocol
-    ANP = "anp"  # Agent Network Protocol
-
-
-# 为了向后兼容，保留 Protocol 类的定义
-# 但标记为概念性，不建议实际使用
-class Protocol:
-    """协议基类（概念性，不建议继承）
-
-    这个类定义了协议的基本概念，但实际实现不需要继承它。
-    各协议根据自己的特点独立实现。
+def create_context(
+    messages: Optional[List[Dict[str, Any]]] = None,
+    tools: Optional[List[Dict[str, Any]]] = None,
+    resources: Optional[List[Dict[str, Any]]] = None,
+    metadata: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
+    创建 MCP 上下文对象
 
-    def __init__(self, protocol_type: ProtocolType, version: str = "1.0.0"):
-        """初始化协议
+    Args:
+        messages: 消息列表
+        tools: 工具列表
+        resources: 资源列表
+        metadata: 元数据
 
-        Args:
-            protocol_type: 协议类型
-            version: 协议版本
-        """
-        self._protocol_type = protocol_type
-        self._version = version
+    Returns:
+        上下文字典
 
-    @property
-    def protocol_name(self) -> str:
-        """获取协议名称"""
-        return self._protocol_type.value
+    Example:
+        >>> context = create_context(
+        ...     messages=[{"role": "user", "content": "Hello"}],
+        ...     tools=[{"name": "calculator", "description": "计算器"}]
+        ... )
+    """
+    return {
+        "messages": messages or [],
+        "tools": tools or [],
+        "resources": resources or [],
+        "metadata": metadata or {}
+    }
 
-    @property
-    def version(self) -> str:
-        """获取协议版本"""
-        return self._version
 
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}(protocol={self.protocol_name}, version={self.version})"
+def parse_context(context: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    解析 MCP 上下文
 
-    def __repr__(self) -> str:
-        return self.__str__()
+    Args:
+        context: 上下文字符串或字典
+
+    Returns:
+        解析后的上下文字典
+
+    Raises:
+        ValueError: 如果上下文格式无效
+
+    Example:
+        >>> context_str = '{"messages": [], "tools": []}'
+        >>> parsed = parse_context(context_str)
+    """
+    if isinstance(context, str):
+        try:
+            context = json.loads(context)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON context: {e}")
+
+    if not isinstance(context, dict):
+        raise ValueError("Context must be a dictionary or JSON string")
+
+    # 确保必需字段存在
+    for field in ["messages", "tools", "resources"]:
+        context.setdefault(field, [])
+    context.setdefault("metadata", {})
+
+    return context
+
+
+def create_error_response(
+    error_message: str,
+    error_code: Optional[str] = None,
+    details: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    创建错误响应
+
+    Args:
+        error_message: 错误消息
+        error_code: 错误代码
+        details: 错误详情
+
+    Returns:
+        错误响应字典
+
+    Example:
+        >>> error = create_error_response("Tool not found", "TOOL_NOT_FOUND")
+    """
+    response = {
+        "error": {
+            "message": error_message,
+            "code": error_code or "UNKNOWN_ERROR"
+        }
+    }
+
+    if details:
+        response["error"]["details"] = details
+
+    return response
+
+
+def create_success_response(
+    data: Any,
+    metadata: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    创建成功响应
+
+    Args:
+        data: 响应数据
+        metadata: 元数据
+
+    Returns:
+        成功响应字典
+
+    Example:
+        >>> response = create_success_response({"result": 42})
+    """
+    response = {
+        "success": True,
+        "data": data
+    }
+
+    if metadata:
+        response["metadata"] = metadata
+
+    return response
+
+
+__all__ = [
+    "create_context",
+    "parse_context",
+    "create_error_response",
+    "create_success_response",
+]
 
