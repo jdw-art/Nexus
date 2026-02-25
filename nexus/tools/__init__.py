@@ -8,9 +8,14 @@ from .builtin.search_tool import SearchTool
 from .builtin.calculator import CalculatorTool
 from .builtin.memory_tool import MemoryTool
 from .builtin.rag_tool import RAGTool
+from .builtin.note_tool import NoteTool
+from .builtin.terminal_tool import TerminalTool
+
+# 协议工具
+from .builtin.protocol_tools import MCPTool, A2ATool, ANPTool
 
 # 高级功能
-from .chain import ToolChain, ToolChainManager
+from .chain import ToolChain, ToolChainManager, create_research_chain, create_simple_chain
 from .async_executor import AsyncToolExecutor, run_parallel_tools, run_batch_tool, run_parallel_tools_sync, run_batch_tool_sync
 
 __all__ = [
@@ -18,16 +23,26 @@ __all__ = [
     "Tool",
     "ToolRegistry",
     "ToolParameter",
+    "global_registry",
 
     # 工具链功能
     "ToolChain",
     "ToolChainManager",
+    "create_research_chain",
+    "create_simple_chain",
 
     # 内置工具
     "SearchTool",
     "CalculatorTool",
     "MemoryTool",
     "RAGTool",
+    "NoteTool",
+    "TerminalTool",
+
+    # 协议工具
+    "MCPTool",
+    "A2ATool",
+    "ANPTool",
 
     # 异步执行功能
     "AsyncToolExecutor",
