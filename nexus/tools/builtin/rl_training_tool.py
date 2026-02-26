@@ -6,8 +6,25 @@
 from typing import Dict, Any, List, Optional
 import json
 from pathlib import Path
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+from tqdm import tqdm
 
 from ..base import Tool, ToolParameter
+
+from ...rl import (
+            GRPOTrainerWrapper,
+            TrainingConfig,
+            create_rl_dataset,
+            create_sft_dataset,
+            create_accuracy_reward,
+            setup_training_environment,
+            TRL_AVAILABLE,
+            create_length_penalty_reward,
+            create_step_reward,
+            evaluate_rewards,
+            SFTTrainerWrapper,
+)
 
 
 class RLTrainingTool(Tool):
@@ -37,7 +54,6 @@ class RLTrainingTool(Tool):
 
         # 检查TRL是否可用
         try:
-            from hello_agents.rl import TRL_AVAILABLE
             self.trl_available = TRL_AVAILABLE
         except ImportError:
             self.trl_available = False
@@ -223,7 +239,6 @@ class RLTrainingTool(Tool):
 
     def _handle_load_dataset(self, parameters: Dict[str, Any]) -> str:
         """处理数据集加载操作"""
-        from hello_agents.rl import create_sft_dataset, create_rl_dataset
 
         format_type = parameters.get("format", "sft").lower()
         split = parameters.get("split", "train")
@@ -251,11 +266,6 @@ class RLTrainingTool(Tool):
 
     def _handle_create_reward(self, parameters: Dict[str, Any]) -> str:
         """处理奖励函数创建操作"""
-        from hello_agents.rl import (
-            create_accuracy_reward,
-            create_length_penalty_reward,
-            create_step_reward
-        )
 
         reward_type = parameters.get("reward_type", "accuracy").lower()
 
@@ -308,13 +318,6 @@ class RLTrainingTool(Tool):
     def _handle_evaluate(self, parameters: Dict[str, Any]) -> str:
         """处理模型评估操作"""
         try:
-            from hello_agents.rl import (
-                create_rl_dataset,
-                create_accuracy_reward,
-                evaluate_rewards
-            )
-            from transformers import AutoModelForCausalLM, AutoTokenizer
-            import torch
 
             model_path = parameters.get("model_path")
             max_samples = parameters.get("max_samples", 100)
@@ -350,7 +353,6 @@ class RLTrainingTool(Tool):
 
             # 导入tqdm用于进度条
             try:
-                from tqdm import tqdm
                 use_tqdm = True
             except ImportError:
                 use_tqdm = False
@@ -430,12 +432,6 @@ class RLTrainingTool(Tool):
             wandb_project: Optional[str] = None
     ) -> Dict[str, Any]:
         """执行SFT训练"""
-        from hello_agents.rl import (
-            SFTTrainerWrapper,
-            TrainingConfig,
-            create_sft_dataset,
-            setup_training_environment
-        )
 
         # 创建配置
         config = TrainingConfig(
@@ -499,13 +495,7 @@ class RLTrainingTool(Tool):
             wandb_project: Optional[str] = None
     ) -> Dict[str, Any]:
         """执行GRPO训练"""
-        from hello_agents.rl import (
-            GRPOTrainerWrapper,
-            TrainingConfig,
-            create_rl_dataset,
-            create_accuracy_reward,
-            setup_training_environment
-        )
+
 
         # 创建配置
         config = TrainingConfig(
