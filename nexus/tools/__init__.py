@@ -13,7 +13,7 @@ from .builtin.terminal_tool import TerminalTool
 
 # 评估工具（第12章）
 from .builtin.bfcl_evaluation_tool import BFCLEvaluationTool
-# from .builtin.gaia_evaluation_tool import GAIAEvaluationTool
+from .builtin.gaia_evaluation_tool import GAIAEvaluationTool
 # from .builtin.llm_judge_tool import LLMJudgeTool
 # from .builtin.win_rate_tool import WinRateTool
 
@@ -55,7 +55,7 @@ __all__ = [
 
     # 评估工具
     "BFCLEvaluationTool",
-    # "GAIAEvaluationTool",
+    "GAIAEvaluationTool",
     # "LLMJudgeTool",
     # "WinRateTool",
 

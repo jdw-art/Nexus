@@ -13,8 +13,8 @@ HelloAgents 智能体评估模块
   - data_generation: 数据生成质量评估
 
 使用示例:
-    >>> from hello_agents.evaluation import BFCLDataset, BFCLEvaluator
-    >>> from hello_agents import SimpleAgent
+    >>> from nexus.evaluation import BFCLDataset, BFCLEvaluator
+    >>> from nexus import SimpleAgent
     >>>
     >>> agent = SimpleAgent(name="TestAgent")
     >>> dataset = BFCLDataset(category="simple_python")
@@ -26,23 +26,23 @@ HelloAgents 智能体评估模块
 # 导出benchmark评估器和数据集
 from nexus.evaluation.benchmarks.bfcl.dataset import BFCLDataset
 from nexus.evaluation.benchmarks.bfcl.evaluator import BFCLEvaluator
-# from hello_agents.evaluation.benchmarks.gaia.dataset import GAIADataset
-# from hello_agents.evaluation.benchmarks.gaia.evaluator import GAIAEvaluator
-# from hello_agents.evaluation.benchmarks.data_generation.dataset import AIDataset
-# from hello_agents.evaluation.benchmarks.data_generation.llm_judge import LLMJudgeEvaluator
-# from hello_agents.evaluation.benchmarks.data_generation.win_rate import WinRateEvaluator
+from nexus.evaluation.benchmarks.gaia.dataset import GAIADataset
+from nexus.evaluation.benchmarks.gaia.evaluator import GAIAEvaluator
+# from nexus.evaluation.benchmarks.data_generation.dataset import AIDataset
+# from nexus.evaluation.benchmarks.data_generation.llm_judge import LLMJudgeEvaluator
+# from nexus.evaluation.benchmarks.data_generation.win_rate import WinRateEvaluator
 
 __version__ = "0.1.0"
 
 __all__ = [
     # Benchmark数据集
     "BFCLDataset",
-    # "GAIADataset",
+    "GAIADataset",
     # "AIDataset",
 
     # Benchmark评估器
     "BFCLEvaluator",
-    # "GAIAEvaluator",
+    "GAIAEvaluator",
     # "LLMJudgeEvaluator",
     # "WinRateEvaluator",
 ]

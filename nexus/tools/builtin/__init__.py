@@ -24,6 +24,9 @@ from .note_tool import NoteTool
 from .terminal_tool import TerminalTool
 from .protocol_tools import MCPTool, A2ATool, ANPTool
 from .bfcl_evaluation_tool import BFCLEvaluationTool
+from .gaia_evaluation_tool import GAIAEvaluationTool
+# from .llm_judge_tool import LLMJudgeTool
+# from .win_rate_tool import WinRateTool
 
 __all__ = [
     "CalculatorTool",
@@ -36,4 +39,5 @@ __all__ = [
     "A2ATool",
     "ANPTool",
     "BFCLEvaluationTool",
+    "GAIAEvaluationTool",
 ]
