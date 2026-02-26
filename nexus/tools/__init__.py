@@ -14,6 +14,9 @@ from .builtin.terminal_tool import TerminalTool
 # 协议工具
 from .builtin.protocol_tools import MCPTool, A2ATool, ANPTool
 
+# RL训练工具（第11章）
+from .builtin.rl_training_tool import RLTrainingTool
+
 # 高级功能
 from .chain import ToolChain, ToolChainManager, create_research_chain, create_simple_chain
 from .async_executor import AsyncToolExecutor, run_parallel_tools, run_batch_tool, run_parallel_tools_sync, run_batch_tool_sync
@@ -43,6 +46,9 @@ __all__ = [
     "MCPTool",
     "A2ATool",
     "ANPTool",
+
+    # RL训练工具
+    "RLTrainingTool",
 
     # 异步执行功能
     "AsyncToolExecutor",
