@@ -11,6 +11,12 @@ from .builtin.rag_tool import RAGTool
 from .builtin.note_tool import NoteTool
 from .builtin.terminal_tool import TerminalTool
 
+# 评估工具（第12章）
+from .builtin.bfcl_evaluation_tool import BFCLEvaluationTool
+# from .builtin.gaia_evaluation_tool import GAIAEvaluationTool
+# from .builtin.llm_judge_tool import LLMJudgeTool
+# from .builtin.win_rate_tool import WinRateTool
+
 # 协议工具
 from .builtin.protocol_tools import MCPTool, A2ATool, ANPTool
 
@@ -46,6 +52,12 @@ __all__ = [
     "MCPTool",
     "A2ATool",
     "ANPTool",
+
+    # 评估工具
+    "BFCLEvaluationTool",
+    # "GAIAEvaluationTool",
+    # "LLMJudgeTool",
+    # "WinRateTool",
 
     # RL训练工具
     "RLTrainingTool",

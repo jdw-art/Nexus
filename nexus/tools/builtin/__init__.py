@@ -23,6 +23,7 @@ from .rag_tool import RAGTool
 from .note_tool import NoteTool
 from .terminal_tool import TerminalTool
 from .protocol_tools import MCPTool, A2ATool, ANPTool
+from .bfcl_evaluation_tool import BFCLEvaluationTool
 
 __all__ = [
     "CalculatorTool",
@@ -34,4 +35,5 @@ __all__ = [
     "MCPTool",
     "A2ATool",
     "ANPTool",
+    "BFCLEvaluationTool",
 ]

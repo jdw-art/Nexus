@@ -25,7 +25,7 @@ HelloAgents 智能体评估模块
 
 # 导出benchmark评估器和数据集
 from nexus.evaluation.benchmarks.bfcl.dataset import BFCLDataset
-from hello_agents.evaluation.benchmarks.bfcl.evaluator import BFCLEvaluator
+from nexus.evaluation.benchmarks.bfcl.evaluator import BFCLEvaluator
 # from hello_agents.evaluation.benchmarks.gaia.dataset import GAIADataset
 # from hello_agents.evaluation.benchmarks.gaia.evaluator import GAIAEvaluator
 # from hello_agents.evaluation.benchmarks.data_generation.dataset import AIDataset
