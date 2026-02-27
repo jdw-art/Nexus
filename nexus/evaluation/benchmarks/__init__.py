@@ -9,13 +9,13 @@ Benchmarks 模块
 
 from nexus.evaluation.benchmarks.bfcl.evaluator import BFCLEvaluator
 from nexus.evaluation.benchmarks.gaia.evaluator import GAIAEvaluator
-# from nexus.evaluation.benchmarks.data_generation.llm_judge import LLMJudgeEvaluator
-# from nexus.evaluation.benchmarks.data_generation.win_rate import WinRateEvaluator
+from nexus.evaluation.benchmarks.data_generation.llm_judge import LLMJudgeEvaluator
+from nexus.evaluation.benchmarks.data_generation.win_rate import WinRateEvaluator
 
 __all__ = [
     "BFCLEvaluator",
     "GAIAEvaluator",
-    # "LLMJudgeEvaluator",
-    # "WinRateEvaluator",
+    "LLMJudgeEvaluator",
+    "WinRateEvaluator",
 ]
 

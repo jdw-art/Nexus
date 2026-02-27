@@ -28,9 +28,9 @@ from nexus.evaluation.benchmarks.bfcl.dataset import BFCLDataset
 from nexus.evaluation.benchmarks.bfcl.evaluator import BFCLEvaluator
 from nexus.evaluation.benchmarks.gaia.dataset import GAIADataset
 from nexus.evaluation.benchmarks.gaia.evaluator import GAIAEvaluator
-# from nexus.evaluation.benchmarks.data_generation.dataset import AIDataset
-# from nexus.evaluation.benchmarks.data_generation.llm_judge import LLMJudgeEvaluator
-# from nexus.evaluation.benchmarks.data_generation.win_rate import WinRateEvaluator
+from nexus.evaluation.benchmarks.data_generation.dataset import AIDataset
+from nexus.evaluation.benchmarks.data_generation.llm_judge import LLMJudgeEvaluator
+from nexus.evaluation.benchmarks.data_generation.win_rate import WinRateEvaluator
 
 __version__ = "0.1.0"
 
@@ -38,12 +38,12 @@ __all__ = [
     # Benchmark数据集
     "BFCLDataset",
     "GAIADataset",
-    # "AIDataset",
+    "AIDataset",
 
     # Benchmark评估器
     "BFCLEvaluator",
     "GAIAEvaluator",
-    # "LLMJudgeEvaluator",
-    # "WinRateEvaluator",
+    "LLMJudgeEvaluator",
+    "WinRateEvaluator",
 ]
 
